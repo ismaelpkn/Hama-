@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111111">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Hama">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Hama Beads Studio</title>
+<style>
+:root{
+  --bg:#f3f4f2; --card:#ffffff; --ink:#15171a; --muted:#666b72; --line:#dcdedb;
+  --accent:#4fb314; --accent-ink:#ffffff; --bar:#111111; --field:#fafbfa;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#101211; --card:#1a1d1b; --ink:#eef0ee; --muted:#9aa09b; --line:#2c312e;
+    --accent:#62c928; --accent-ink:#0b1204; --bar:#000000; --field:#141715;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;-webkit-text-size-adjust:100%}
+body{padding-bottom:env(safe-area-inset-bottom)}
+header{background:var(--bar);color:#fff;padding:calc(14px + env(safe-area-inset-top)) 16px 14px;display:flex;align-items:center;gap:12px}
+header .logo{width:38px;height:38px;border-radius:10px;flex:none}
+header h1{font-size:18px;margin:0;line-height:1.15}
+header p{margin:2px 0 0;font-size:12.5px;color:#b9bdb8}
+main{max-width:1100px;margin:0 auto;padding:14px 16px 40px;display:grid;gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.drop{border:2px dashed var(--line);border-radius:14px;padding:18px;text-align:center;display:grid;gap:10px;justify-items:center;background:var(--field);cursor:pointer}
+.drop.over{border-color:var(--accent)}
+.drop img{max-width:120px;max-height:120px;border-radius:8px;display:none;image-rendering:auto}
+.drop strong{font-size:15px}
+.drop span{font-size:13px;color:var(--muted)}
+button,.btn{font:inherit;font-weight:600;border:0;border-radius:10px;padding:11px 16px;background:var(--accent);color:var(--accent-ink);cursor:pointer}
+button.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+button.sm{padding:6px 10px;font-size:13px;font-weight:600}
+button:disabled{opacity:.45;cursor:default}
+.grid2{display:grid;gap:14px;grid-template-columns:1fr}
+@media(min-width:820px){.grid2{grid-template-columns:340px 1fr;align-items:start}}
+label.row{display:grid;gap:6px;margin-bottom:14px;font-size:14px;font-weight:600}
+label.row small{font-weight:400;color:var(--muted);font-size:12.5px}
+.line{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.line b{font-variant-numeric:tabular-nums;color:var(--accent)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input[type=number],input[type=text],select{font:inherit;width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--field);color:var(--ink)}
+.chk{display:flex;gap:10px;align-items:center;font-size:14px;font-weight:500;margin-bottom:10px}
+.chk input{width:20px;height:20px;accent-color:var(--accent)}
+.presets{display:flex;gap:8px;flex-wrap:wrap}
+.hint{font-size:12.5px;color:var(--muted);margin:0 0 12px}
+.hint.ok{color:var(--accent)}
+.preview{display:grid;gap:12px}
+.canvaswrap{overflow:auto;border:1px solid var(--line);border-radius:10px;background:#fff}
+canvas#sheet{width:100%;height:auto;display:block}
+.empty{padding:60px 16px;text-align:center;color:var(--muted);font-size:14px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+details summary{cursor:pointer;font-weight:700;font-size:14px;padding:4px 0}
+.pal{display:grid;gap:6px;margin-top:10px}
+.pal .p{display:grid;grid-template-columns:22px 34px 1fr 70px 26px;gap:6px;align-items:center}
+.pal input[type=color]{width:34px;height:30px;padding:0;border:1px solid var(--line);border-radius:6px;background:none}
+.pal input[type=text]{padding:6px 8px;font-size:13px}
+.pal input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
+.pal .x{background:none;border:0;color:var(--muted);padding:0;font-size:18px}
+.pal .head{font-size:11.5px;color:var(--muted);display:grid;grid-template-columns:22px 34px 1fr 70px 26px;gap:6px}
+.pal-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.note{font-size:12.5px;color:var(--muted);margin:8px 0 0}
+</style>
+</head>
+<body>
+<header>
+  <svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#1b1b1b"/>
+  <g fill="#e5383b"><circle cx="19" cy="22" r="5"/><circle cx="27" cy="22" r="5"/><circle cx="37" cy="22" r="5"/><circle cx="45" cy="22" r="5"/><circle cx="15" cy="30" r="5"/><circle cx="23" cy="30" r="5"/><circle cx="32" cy="30" r="5"/><circle cx="41" cy="30" r="5"/><circle cx="49" cy="30" r="5"/><circle cx="19" cy="38" r="5"/><circle cx="27" cy="38" r="5"/><circle cx="37" cy="38" r="5"/><circle cx="45" cy="38" r="5"/><circle cx="24" cy="46" r="5"/><circle cx="32" cy="46" r="5"/><circle cx="40" cy="46" r="5"/></g></svg>
+  <div><h1>Hama Beads Studio</h1><p>Transforme qualquer imagem em um modelo 8-bit de contas</p></div>
+</header>
+
+<main>
+  <section class="card">
+    <div class="drop" id="drop">
+      <img id="thumb" alt="">
+      <strong id="dropTitle">Toque para escolher uma imagem</strong>
+      <span>ou arraste / cole (Ctrl+V) aqui — qualquer foto, desenho ou PNG com fundo transparente</span>
+      <button type="button" id="pick">Escolher imagem</button>
+      <input type="file" id="file" accept="image/*" hidden>
+    </div>
+  </section>
+
+  <div class="grid2">
+    <section class="card">
+      <label class="row">Título da folha
+        <input type="text" id="title" value="Meu modelo" maxlength="40">
+      </label>
+
+      <label class="row">
+        <span>Tamanho da placa (cm)</span>
+        <input type="number" id="board" value="14" min="3" max="60" step="0.5" inputmode="decimal">
+        <small id="boardInfo"></small>
+      </label>
+
+      <label class="row">
+        <span class="line"><span>Tamanho do modelo (maior lado)</span><b id="sizeOut"></b></span>
+        <input type="range" id="size" min="8" max="53" value="53">
+        <small id="sizeCm"></small>
+      </label>
+      <div class="presets" style="margin:-4px 0 14px">
+        <button type="button" class="ghost sm" data-p="0.35">Pequeno</button>
+        <button type="button" class="ghost sm" data-p="0.65">Médio</button>
+        <button type="button" class="ghost sm" data-p="1">Placa cheia</button>
+      </div>
+
+      <label class="row">
+        <span class="line"><span>Máximo de cores</span><b id="maxOut"></b></span>
+        <input type="range" id="maxc" min="2" max="24" value="10">
+        <small>Menos cores = mais fácil de montar</small>
+      </label>
+
+      <label class="row">
+        <span class="line"><span>Contraste</span><b id="conOut">0</b></span>
+        <input type="range" id="con" min="-50" max="100" value="0">
+      </label>
+      <label class="row">
+        <span class="line"><span>Saturação</span><b id="satOut">0</b></span>
+        <input type="range" id="sat" min="-50" max="100" value="0">
+      </label>
+
+      <label class="chk"><input type="checkbox" id="dither"> Pontilhado (suaviza degradês)</label>
+      <label class="chk"><input type="checkbox" id="white"> Tratar branco como vazio (sem conta)</label>
+      <label class="chk"><input type="checkbox" id="nums"> Mostrar número da cor em cada conta</label>
+
+      <details>
+        <summary>Paleta de cores e códigos</summary>
+        <p class="note">Ajuste a cor, o nome e o código para ficarem iguais às contas que você tem. Desmarque as cores que você não possui.</p>
+        <div class="pal" id="pal"></div>
+        <div class="pal-actions">
+          <button type="button" class="ghost sm" id="addColor">+ Adicionar cor</button>
+          <button type="button" class="ghost sm" id="resetPal">Restaurar padrão</button>
+        </div>
+      </details>
+    </section>
+
+    <section class="card preview">
+      <div class="canvaswrap" id="wrap">
+        <div class="empty" id="empty">Escolha uma imagem para ver o modelo aqui.</div>
+        <canvas id="sheet" hidden></canvas>
+      </div>
+      <div class="actions">
+        <button type="button" id="dl" disabled>Baixar PNG</button>
+        <button type="button" class="ghost" id="share" disabled>Compartilhar</button>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+"use strict";
+const PIN_MM = 2.6;
+const LS_PAL = "hama.palette.v1";
+const LS_SET = "hama.settings.v1";
+
+const DEFAULT_PALETTE = [
+  {id:"branco",name:"Branco",hex:"#FFFFFF",code:"H2",on:true},
+  {id:"preto",name:"Preto",hex:"#1B1B1B",code:"H7",on:true},
+  {id:"cinza-claro",name:"Cinza Claro",hex:"#B8B9BB",code:"",on:true},
+  {id:"cinza",name:"Cinza",hex:"#7E7F82",code:"",on:true},
+  {id:"cinza-escuro",name:"Cinza Escuro",hex:"#4A4B4E",code:"",on:true},
+  {id:"vermelho",name:"Vermelho",hex:"#C8102E",code:"",on:true},
+  {id:"laranja",name:"Laranja",hex:"#F57C00",code:"",on:true},
+  {id:"amarelo",name:"Amarelo",hex:"#FFD500",code:"",on:true},
+  {id:"creme",name:"Creme",hex:"#F2E3B8",code:"",on:true},
+  {id:"pele",name:"Pele",hex:"#F1B793",code:"",on:true},
+  {id:"rosa-claro",name:"Rosa Claro",hex:"#F6B8CC",code:"",on:true},
+  {id:"rosa",name:"Rosa",hex:"#E8478B",code:"",on:true},
+  {id:"roxo",name:"Roxo",hex:"#7A3E9D",code:"",on:true},
+  {id:"vinho",name:"Vinho",hex:"#7B1E34",code:"",on:true},
+  {id:"marrom",name:"Marrom",hex:"#6B4226",code:"",on:true},
+  {id:"marrom-claro",name:"Marrom Claro",hex:"#B07D52",code:"",on:true},
+  {id:"azul-claro",name:"Azul Claro",hex:"#5BC0EB",code:"",on:true},
+  {id:"azul",name:"Azul",hex:"#1565C0",code:"",on:true},
+  {id:"azul-escuro",name:"Azul Escuro",hex:"#12336B",code:"",on:true},
+  {id:"turquesa",name:"Turquesa",hex:"#00A7A7",code:"",on:true},
+  {id:"verde-claro",name:"Verde Claro",hex:"#7ED321",code:"",on:true},
+  {id:"verde",name:"Verde",hex:"#2E9E3E",code:"",on:true},
+  {id:"verde-escuro",name:"Verde Escuro",hex:"#0F5A2E",code:"",on:true},
+  {id:"lima",name:"Lima",hex:"#C8E02A",code:"",on:true}
+];
+
+const $ = id => document.getElementById(id);
+let palette = loadPalette();
+let img = null;
+let imgName = "Meu modelo";
+let result = null;
+let timer = null;
+
+/* ---------- storage ---------- */
+function loadPalette(){
+  try{
+    const s = localStorage.getItem(LS_PAL);
+    if(s){ const p = JSON.parse(s); if(Array.isArray(p) && p.length) return p; }
+  }catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULT_PALETTE));
+}
+function savePalette(){ try{ localStorage.setItem(LS_PAL, JSON.stringify(palette)); }catch(e){} }
+function saveSettings(){
+  try{ localStorage.setItem(LS_SET, JSON.stringify({board:$("board").value,maxc:$("maxc").value,dither:$("dither").checked,white:$("white").checked,nums:$("nums").checked})); }catch(e){}
+}
+function loadSettings(){
+  try{
+    const s = JSON.parse(localStorage.getItem(LS_SET)||"null");
+    if(!s) return;
+    $("board").value = s.board||14; $("maxc").value = s.maxc||10;
+    $("dither").checked = !!s.dither; $("white").checked = !!s.white; $("nums").checked = !!s.nums;
+  }catch(e){}
+}
+
+/* ---------- color ---------- */
+function hex2rgb(h){ const n = parseInt(h.slice(1),16); return [(n>>16)&255,(n>>8)&255,n&255]; }
+function rgb2lab(r,g,b){
+  const f = v => { v/=255; return v<=0.04045 ? v/12.92 : Math.pow((v+0.055)/1.055,2.4); };
+  const R=f(r),G=f(g),B=f(b);
+  let X=(R*0.4124+G*0.3576+B*0.1805)/0.95047;
+  let Y=(R*0.2126+G*0.7152+B*0.0722);
+  let Z=(R*0.0193+G*0.1192+B*0.9505)/1.08883;
+  const t = v => v>0.008856 ? Math.cbrt(v) : 7.787*v+16/116;
+  X=t(X);Y=t(Y);Z=t(Z);
+  return [116*Y-16, 500*(X-Y), 200*(Y-Z)];
+}
+function nearest(lab, list){
+  let best=0, bd=1e18;
+  for(let i=0;i<list.length;i++){
+    const c=list[i].lab;
+    const dl=lab[0]-c[0], da=lab[1]-c[1], db=lab[2]-c[2];
+    const d=dl*dl+da*da+db*db;
+    if(d<bd){bd=d;best=i;}
+  }
+  return best;
+}
+const clamp = (v,a,b)=>v<a?a:v>b?b:v;
+const fmt1 = n => n.toFixed(1).replace(".",",");
+
+/* ---------- sizing ---------- */
+function boardPins(){
+  const cm = parseFloat($("board").value)||14;
+  return Math.max(8, Math.floor(cm*10/PIN_MM + 1e-6));
+}
+function gridDims(){
+  const N = parseInt($("size").value,10);
+  if(!img) return {gw:N,gh:N};
+  const ar = img.naturalWidth/img.naturalHeight;
+  return ar>=1 ? {gw:N, gh:Math.max(1,Math.round(N/ar))} : {gw:Math.max(1,Math.round(N*ar)), gh:N};
+}
+function updateSizeUI(keepProportion){
+  const max = boardPins();
+  const size = $("size");
+  const old = parseInt(size.value,10), oldMax = parseInt(size.max,10)||max;
+  size.max = max;
+  if(keepProportion) size.value = Math.max(8, Math.round(max*old/oldMax));
+  if(parseInt(size.value,10)>max) size.value = max;
+  $("boardInfo").textContent = "Cabem "+max+" × "+max+" contas de "+fmt1(PIN_MM).replace(",",",")+" mm";
+  const {gw,gh} = gridDims();
+  $("sizeOut").textContent = size.value+" contas";
+  $("sizeCm").textContent = gw+" × "+gh+" contas  ≈  "+fmt1(gw*PIN_MM/10)+" × "+fmt1(gh*PIN_MM/10)+" cm";
+  $("maxOut").textContent = $("maxc").value;
+  $("conOut").textContent = $("con").value;
+  $("satOut").textContent = $("sat").value;
+}
+
+/* ---------- image -> grid ---------- */
+function downscale(src, w, h){
+  let c = document.createElement("canvas");
+  let cw = src.naturalWidth||src.width, ch = src.naturalHeight||src.height;
+  c.width=cw; c.height=ch;
+  c.getContext("2d").drawImage(src,0,0);
+  while(cw/2>=w*1.0 && ch/2>=h*1.0 && cw>w*2 && ch>h*2){
+    const nw=Math.max(w,Math.floor(cw/2)), nh=Math.max(h,Math.floor(ch/2));
+    const t=document.createElement("canvas"); t.width=nw; t.height=nh;
+    const x=t.getContext("2d"); x.imageSmoothingEnabled=true; x.imageSmoothingQuality="high";
+    x.drawImage(c,0,0,nw,nh); c=t; cw=nw; ch=nh;
+  }
+  const f=document.createElement("canvas"); f.width=w; f.height=h;
+  const fx=f.getContext("2d"); fx.imageSmoothingEnabled=true; fx.imageSmoothingQuality="high";
+  fx.drawImage(c,0,0,w,h);
+  return f;
+}
+
+function buildGrid(){
+  if(!img) return null;
+  const {gw,gh} = gridDims();
+  const pal = palette.filter(p=>p.on).map(p=>{ const rgb=hex2rgb(p.hex); return {...p,rgb,lab:rgb2lab(rgb[0],rgb[1],rgb[2])}; });
+  if(!pal.length) return null;
+
+  const small = downscale(img,gw,gh);
+  const d = small.getContext("2d").getImageData(0,0,gw,gh).data;
+  const n = gw*gh;
+  const rgb = new Float32Array(n*3);
+  const empty = new Uint8Array(n);
+  const k = 1 + parseInt($("con").value,10)/100;
+  const s = 1 + parseInt($("sat").value,10)/100;
+  const whiteEmpty = $("white").checked;
+
+  for(let i=0;i<n;i++){
+    let r=d[i*4],g=d[i*4+1],b=d[i*4+2];
+    const a=d[i*4+3];
+    if(a<128 || (whiteEmpty && r>242 && g>242 && b>242)){ empty[i]=1; continue; }
+    const lum=0.299*r+0.587*g+0.114*b;
+    r=lum+(r-lum)*s; g=lum+(g-lum)*s; b=lum+(b-lum)*s;
+    r=clamp((r-128)*k+128,0,255); g=clamp((g-128)*k+128,0,255); b=clamp((b-128)*k+128,0,255);
+    rgb[i*3]=r; rgb[i*3+1]=g; rgb[i*3+2]=b;
+  }
+
+  // 1) escolhe as cores mais usadas
+  const counts = new Array(pal.length).fill(0);
+  for(let i=0;i<n;i++){
+    if(empty[i]) continue;
+    counts[nearest(rgb2lab(rgb[i*3],rgb[i*3+1],rgb[i*3+2]),pal)]++;
+  }
+  const maxc = parseInt($("maxc").value,10);
+  const order = counts.map((c,i)=>[c,i]).filter(x=>x[0]>0).sort((a,b)=>b[0]-a[0]).slice(0,maxc).map(x=>x[1]);
+  const chosen = order.map(i=>pal[i]);
+  if(!chosen.length) return {gw,gh,grid:new Int16Array(n).fill(-1),legend:[],total:0};
+
+  // 2) mapeia (com ou sem pontilhado)
+  const grid = new Int16Array(n).fill(-1);
+  const dith = $("dither").checked;
+  const buf = Float32Array.from(rgb);
+  const add = (x,y,e,w)=>{
+    if(x<0||x>=gw||y>=gh) return;
+    const j=y*gw+x; if(empty[j]) return;
+    buf[j*3]+=e[0]*w; buf[j*3+1]+=e[1]*w; buf[j*3+2]+=e[2]*w;
+  };
+  for(let y=0;y<gh;y++){
+    for(let x=0;x<gw;x++){
+      const i=y*gw+x; if(empty[i]) continue;
+      const r=clamp(buf[i*3],0,255),g=clamp(buf[i*3+1],0,255),b=clamp(buf[i*3+2],0,255);
+      const j=nearest(rgb2lab(r,g,b),chosen);
+      grid[i]=j;
+      if(dith){
+        const c=chosen[j].rgb, e=[(r-c[0])*0.8,(g-c[1])*0.8,(b-c[2])*0.8];
+        add(x+1,y,e,7/16); add(x-1,y+1,e,3/16); add(x,y+1,e,5/16); add(x+1,y+1,e,1/16);
+      }
+    }
+  }
+
+  // 3) legenda ordenada por quantidade
+  const cnt = new Array(chosen.length).fill(0);
+  for(let i=0;i<n;i++) if(grid[i]>=0) cnt[grid[i]]++;
+  const idx = cnt.map((c,i)=>i).filter(i=>cnt[i]>0).sort((a,b)=>cnt[b]-cnt[a]);
+  const remap = new Array(chosen.length).fill(-1);
+  const legend = idx.map((old,newI)=>{ remap[old]=newI; const c=chosen[old]; return {name:c.name,code:c.code,hex:c.hex,rgb:c.rgb,count:cnt[old]}; });
+  for(let i=0;i<n;i++) if(grid[i]>=0) grid[i]=remap[grid[i]];
+  const total = legend.reduce((a,l)=>a+l.count,0);
+  return {gw,gh,grid,legend,total};
+}
+
+/* ---------- desenho da folha ---------- */
+function rr(ctx,x,y,w,h,r){
+  ctx.beginPath(); ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h); ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r); ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
+}
+function arrowHead(ctx,x,y,dx,dy,sz){
+  ctx.beginPath(); ctx.moveTo(x,y);
+  ctx.lineTo(x-dx*sz+dy*sz*0.5, y-dy*sz-dx*sz*0.5);
+  ctx.lineTo(x-dx*sz-dy*sz*0.5, y-dy*sz+dx*sz*0.5);
+  ctx.closePath(); ctx.fill();
+}
+const FONT = '"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif';
+
+function render(){
+  const cv = $("sheet");
+  if(!result){ cv.hidden=true; $("empty").hidden=false; $("dl").disabled=true; $("share").disabled=true; return; }
+  const {gw,gh,grid,legend,total} = result;
+  const showNums = $("nums").checked;
+  const title = ($("title").value||"Meu modelo").trim();
+
+  const cell = clamp(Math.floor(1100/gw),16,40);
+  const gx=70, gy=172, gridW=gw*cell, gridH=gh*cell;
+  const legW=340, rowH=86;
+  let W = gx+gridW+110+legW+20;
+  W = Math.max(W,820);
+  const legX = W-20-legW, legY=150;
+  const legH = 56 + legend.length*rowH + 70;
+  const ay = gy+gridH+44;
+  const H = Math.max(ay+80, legY+legH+24);
+
+  cv.width=W; cv.height=H;
+  const ctx = cv.getContext("2d");
+  ctx.fillStyle="#fff"; ctx.fillRect(0,0,W,H);
+
+  // título
+  ctx.fillStyle="#6cc12a";
+  rr(ctx,20,56,100,12,6); ctx.fill(); rr(ctx,W-120,56,100,12,6); ctx.fill();
+  ctx.fillStyle="#111"; rr(ctx,130,14,W-260,100,22); ctx.fill();
+  ctx.fillStyle="#fff"; ctx.textAlign="center"; ctx.textBaseline="alphabetic";
+  let fs=46; ctx.font="800 "+fs+"px "+FONT;
+  while(ctx.measureText(title).width>W-340 && fs>22){ fs-=2; ctx.font="800 "+fs+"px "+FONT; }
+  ctx.fillText(title,W/2,64);
+  ctx.font="700 24px "+FONT;
+  ctx.fillText("Hama Beads – "+gw+" x "+gh+" pinos ("+fmt1(PIN_MM).replace(",",",")+" mm)",W/2,98);
+
+  // rótulos
+  ctx.fillStyle="#222"; ctx.font="500 "+Math.max(13,Math.min(20,cell*0.8))+"px "+FONT;
+  ctx.textAlign="center"; ctx.textBaseline="bottom";
+  for(let x=1;x<=gw;x++) if(x===1||x%5===0||x===gw) ctx.fillText(String(x),gx+(x-0.5)*cell,gy-8);
+  ctx.textAlign="right"; ctx.textBaseline="middle";
+  for(let y=1;y<=gh;y++) if(y===1||y%5===0||y===gh) ctx.fillText(String(y),gx-10,gy+(y-0.5)*cell);
+
+  // contas
+  const rad = cell*0.47;
+  ctx.textAlign="center"; ctx.textBaseline="middle";
+  const nfont = "700 "+Math.floor(cell*0.5)+"px "+FONT;
+  for(let y=0;y<gh;y++){
+    for(let x=0;x<gw;x++){
+      const v=grid[y*gw+x];
+      const cx=gx+(x+0.5)*cell, cy=gy+(y+0.5)*cell;
+      ctx.beginPath(); ctx.arc(cx,cy,rad,0,Math.PI*2);
+      if(v<0){ ctx.fillStyle="#fff"; ctx.fill(); ctx.strokeStyle="#bdbdbd"; ctx.lineWidth=1; ctx.stroke(); }
+      else{
+        const l=legend[v]; ctx.fillStyle=l.hex; ctx.fill();
+        ctx.strokeStyle = (l.rgb[0]+l.rgb[1]+l.rgb[2])>720 ? "#9a9a9a" : "rgba(0,0,0,.35)"; ctx.lineWidth=1; ctx.stroke();
+        if(showNums && cell>=16){
+          const lum=0.299*l.rgb[0]+0.587*l.rgb[1]+0.114*l.rgb[2];
+          ctx.fillStyle = lum>140 ? "#111" : "#fff"; ctx.font=nfont; ctx.fillText(String(v+1),cx,cy+1);
+        }
+      }
+    }
+  }
+  ctx.strokeStyle="#111"; ctx.lineWidth=2; ctx.strokeRect(gx,gy,gridW,gridH);
+
+  // medidas
+  const wcm=gw*PIN_MM/10, hcm=gh*PIN_MM/10;
+  ctx.strokeStyle="#111"; ctx.fillStyle="#111"; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(gx+10,ay); ctx.lineTo(gx+gridW-10,ay); ctx.stroke();
+  arrowHead(ctx,gx,ay,-1,0,14); arrowHead(ctx,gx+gridW,ay,1,0,14);
+  const t1="≈ "+fmt1(wcm)+" cm";
+  ctx.font="800 32px "+FONT; const tw=ctx.measureText(t1).width;
+  ctx.fillStyle="#fff"; ctx.fillRect(gx+gridW/2-tw/2-14,ay-20,tw+28,66);
+  ctx.fillStyle="#111"; ctx.textAlign="center"; ctx.textBaseline="alphabetic";
+  ctx.fillText(t1,gx+gridW/2,ay+10);
+  ctx.font="600 22px "+FONT; ctx.fillText("("+gw+" pinos)",gx+gridW/2,ay+38);
+
+  const ax=gx+gridW+34;
+  ctx.strokeStyle="#111"; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(ax,gy+10); ctx.lineTo(ax,gy+gridH-10); ctx.stroke();
+  arrowHead(ctx,ax,gy,0,-1,14); arrowHead(ctx,ax,gy+gridH,0,1,14);
+  ctx.save(); ctx.translate(ax+14,gy+gridH/2); ctx.rotate(Math.PI/2);
+  const t2="≈ "+fmt1(hcm)+" cm"; ctx.font="800 32px "+FONT; const tw2=ctx.measureText(t2).width;
+  ctx.fillStyle="#fff"; ctx.fillRect(-tw2/2-14,-30,tw2+28,70);
+  ctx.fillStyle="#111"; ctx.textAlign="center"; ctx.textBaseline="alphabetic";
+  ctx.fillText(t2,0,0); ctx.font="600 22px "+FONT; ctx.fillText("("+gh+" pinos)",0,30);
+  ctx.restore();
+
+  // legenda
+  ctx.fillStyle="#111"; rr(ctx,legX,legY,legW,56,18); ctx.fill();
+  ctx.fillStyle="#fff"; ctx.font="800 28px "+FONT; ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText("Cores Utilizadas",legX+legW/2,legY+29);
+  ctx.fillStyle="#fff"; rr(ctx,legX,legY+40,legW,legH-40,16); ctx.fill();
+  ctx.strokeStyle="#111"; ctx.lineWidth=3; ctx.stroke();
+  ctx.fillStyle="#111"; rr(ctx,legX,legY,legW,56,18); ctx.fill();
+  ctx.fillStyle="#fff"; ctx.font="800 28px "+FONT; ctx.fillText("Cores Utilizadas",legX+legW/2,legY+29);
+
+  legend.forEach((l,i)=>{
+    const ry=legY+56+i*rowH+8;
+    const sx=legX+46, sy=ry+rowH/2-6;
+    ctx.beginPath(); ctx.arc(sx,sy,28,0,Math.PI*2); ctx.fillStyle=l.hex; ctx.fill();
+    ctx.strokeStyle=(l.rgb[0]+l.rgb[1]+l.rgb[2])>720?"#888":"#111"; ctx.lineWidth=2; ctx.stroke();
+    if(showNums){
+      const lum=0.299*l.rgb[0]+0.587*l.rgb[1]+0.114*l.rgb[2];
+      ctx.fillStyle=lum>140?"#111":"#fff"; ctx.font="800 24px "+FONT; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(String(i+1),sx,sy+1);
+    }
+    ctx.textAlign="left"; ctx.textBaseline="alphabetic"; ctx.fillStyle="#111";
+    const tx=legX+92;
+    let nm=l.name; ctx.font="800 26px "+FONT; while(ctx.measureText(nm).width>legW-tx+legX-14 && nm.length>3) nm=nm.slice(0,-2);
+    if(nm!==l.name) nm+="…";
+    if(l.code){
+      ctx.fillText(nm,tx,ry+22);
+      ctx.fillStyle="#444"; ctx.font="500 21px "+FONT; ctx.fillText("(Nº "+l.code+")",tx,ry+46);
+      ctx.fillStyle="#333"; ctx.font="600 22px "+FONT; ctx.fillText("≈ "+l.count.toLocaleString("pt-BR")+" pinos",tx,ry+70);
+    }else{
+      ctx.fillText(nm,tx,ry+30);
+      ctx.fillStyle="#333"; ctx.font="600 22px "+FONT; ctx.fillText("≈ "+l.count.toLocaleString("pt-BR")+" pinos",tx,ry+60);
+    }
+  });
+  ctx.fillStyle="#111"; ctx.textAlign="center"; ctx.textBaseline="alphabetic"; ctx.font="700 22px "+FONT;
+  ctx.fillText("Total: "+total.toLocaleString("pt-BR")+" pinos",legX+legW/2,legY+56+legend.length*rowH+44);
+
+  cv.hidden=false; $("empty").hidden=true; $("dl").disabled=false; $("share").disabled=false;
+}
+
+/* ---------- fluxo ---------- */
+function update(){
+  updateSizeUI(false);
+  result = buildGrid();
+  render();
+  saveSettings();
+}
+function schedule(){ updateSizeUI(false); clearTimeout(timer); timer=setTimeout(update,60); }
+
+function loadFile(f){
+  if(!f || !f.type.startsWith("image/")) return;
+  const url=URL.createObjectURL(f);
+  const im=new Image();
+  im.onload=()=>{
+    img=im; imgName=f.name.replace(/\.[^.]+$/,"")||"Meu modelo";
+    $("title").value=imgName.slice(0,40);
+    $("thumb").src=url; $("thumb").style.display="block";
+    $("dropTitle").textContent="Trocar imagem";
+    update();
+    $("wrap").scrollIntoView({behavior:"smooth",block:"nearest"});
+  };
+  im.onerror=()=>alert("Não consegui abrir essa imagem.");
+  im.src=url;
+}
+
+function canvasBlob(cb){ $("sheet").toBlob(cb,"image/png"); }
+function fileName(){ return (($("title").value||"modelo").trim().replace(/[^\w\-À-ú ]+/g,"").replace(/\s+/g,"-")||"modelo")+"-hama.png"; }
+
+/* ---------- paleta UI ---------- */
+function renderPalette(){
+  const box=$("pal"); box.innerHTML="";
+  const head=document.createElement("div"); head.className="head";
+  head.innerHTML="<span></span><span>Cor</span><span>Nome</span><span>Código</span><span></span>"; box.appendChild(head);
+  palette.forEach((p,i)=>{
+    const row=document.createElement("div"); row.className="p";
+    const on=document.createElement("input"); on.type="checkbox"; on.checked=p.on;
+    on.onchange=()=>{p.on=on.checked; savePalette(); schedule();};
+    const col=document.createElement("input"); col.type="color"; col.value=p.hex;
+    col.onchange=()=>{p.hex=col.value; savePalette(); schedule();};
+    const nm=document.createElement("input"); nm.type="text"; nm.value=p.name;
+    nm.onchange=()=>{p.name=nm.value||"Cor"; savePalette(); render();};
+    const cd=document.createElement("input"); cd.type="text"; cd.value=p.code; cd.placeholder="ex: H7";
+    cd.onchange=()=>{p.code=cd.value.trim(); savePalette(); render();};
+    const del=document.createElement("button"); del.className="x"; del.type="button"; del.textContent=p.custom?"×":"";
+    if(p.custom) del.onclick=()=>{palette.splice(i,1); savePalette(); renderPalette(); schedule();};
+    row.append(on,col,nm,cd,del); box.appendChild(row);
+  });
+}
+
+/* ---------- eventos ---------- */
+$("pick").onclick=e=>{e.stopPropagation(); $("file").click();};
+$("drop").onclick=()=>$("file").click();
+$("file").onchange=e=>loadFile(e.target.files[0]);
+["dragenter","dragover"].forEach(ev=>$("drop").addEventListener(ev,e=>{e.preventDefault();$("drop").classList.add("over");}));
+["dragleave","drop"].forEach(ev=>$("drop").addEventListener(ev,e=>{e.preventDefault();$("drop").classList.remove("over");}));
+$("drop").addEventListener("drop",e=>loadFile(e.dataTransfer.files[0]));
+document.addEventListener("paste",e=>{
+  const it=[...(e.clipboardData?.items||[])].find(i=>i.type.startsWith("image/"));
+  if(it) loadFile(it.getAsFile());
+});
+
+$("board").oninput=()=>{updateSizeUI(true); clearTimeout(timer); timer=setTimeout(update,150);};
+["size","maxc","con","sat"].forEach(id=>$(id).oninput=schedule);
+["dither","white"].forEach(id=>$(id).onchange=update);
+$("nums").onchange=()=>{render();saveSettings();};
+$("title").oninput=render;
+document.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{
+  const max=boardPins(); $("size").value=Math.max(8,Math.round(max*parseFloat(b.dataset.p))); schedule();
+});
+$("addColor").onclick=()=>{
+  palette.push({id:"c"+Date.now(),name:"Nova cor",hex:"#ff5ac8",code:"",on:true,custom:true});
+  savePalette(); renderPalette(); schedule();
+};
+$("resetPal").onclick=()=>{
+  if(!confirm("Restaurar a paleta padrão? Suas edições de cores e códigos serão perdidas.")) return;
+  palette=JSON.parse(JSON.stringify(DEFAULT_PALETTE)); savePalette(); renderPalette(); schedule();
+};
+$("dl").onclick=()=>canvasBlob(b=>{
+  const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download=fileName();
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+});
+$("share").onclick=()=>canvasBlob(async b=>{
+  const f=new File([b],fileName(),{type:"image/png"});
+  try{
+    if(navigator.canShare && navigator.canShare({files:[f]})) await navigator.share({files:[f],title:$("title").value});
+    else $("dl").click();
+  }catch(e){}
+});
+
+/* ---------- início ---------- */
+loadSettings();
+$("size").max=boardPins(); $("size").value=boardPins();
+renderPalette();
+updateSizeUI(false);
+render();
+
+if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")){
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>
